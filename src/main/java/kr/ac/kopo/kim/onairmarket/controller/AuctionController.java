@@ -6,6 +6,7 @@ import kr.ac.kopo.kim.onairmarket.domain.TimedAuction;
 import kr.ac.kopo.kim.onairmarket.exception.ServiceException;
 import kr.ac.kopo.kim.onairmarket.service.AuctionService;
 import kr.ac.kopo.kim.onairmarket.service.MemberService;
+import kr.ac.kopo.kim.onairmarket.service.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,13 +15,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 
-/** 경매 상세 · 입찰 · 관심 저장 */
+/** 경매 상세 · 입찰 · 관심 저장 · 비슷한 경매 추천 */
 @Controller
 @RequestMapping("/auctions")
 @RequiredArgsConstructor
 public class AuctionController {
     private final AuctionService auctionService;
     private final MemberService memberService;
+    private final RecommendationService recommendationService;
 
     @GetMapping("/{id}")
     public String detail(@PathVariable String id, Model model, HttpServletResponse response) {
@@ -40,6 +42,7 @@ public class AuctionController {
         model.addAttribute("mine", me != null && a.getOwner().getId().equals(me.getId()));
         model.addAttribute("bids", auctionService.history(id));
         model.addAttribute("bookmarked", auctionService.isBookmarked(me, id));
+        model.addAttribute("similar", recommendationService.similar(id));   // TF-IDF 비슷한 경매
         return "auction-detail";
     }
 

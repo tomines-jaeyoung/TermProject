@@ -40,6 +40,9 @@ public interface TimedAuctionRepository extends JpaRepository<TimedAuction, Stri
 
     long countByArchivedTrue();
 
+    /** 추천 모델 학습용: 공개(숨기지 않은) 경매 전체 */
+    List<TimedAuction> findByArchivedFalse();
+
     long countByArchivedFalseAndStartsAtLessThanEqualAndEndsAtGreaterThan(long startedBy, long endsAfter);
 
     /** 홈 '곧 낙찰됩니다': 진행 중인 경매를 마감이 가까운 순으로 4개 */

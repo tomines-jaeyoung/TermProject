@@ -67,6 +67,18 @@
             <p th:if="${#lists.isEmpty(bids)}" class="oa-sub">아직 입찰이 없습니다.</p>
         </section>
     </div>
+
+    <section class="oa-block-section oa-similar" th:if="${!#lists.isEmpty(similar)}">
+        <h2>이 상품과 비슷한 경매 <span class="oa-ml-tag">ML 추천</span></h2>
+        <p class="oa-sub">상품명 · 설명 · 카테고리를 TF-IDF로 벡터화해 코사인 유사도가 높은 순서로 보여 줍니다.</p>
+        <div class="oa-grid">
+            <div class="oa-similar-item" th:each="r : ${similar}">
+                <article th:replace="~{fragments/layout :: card(${r.auction})}"></article>
+                <p class="oa-similar-score">유사도 <strong th:text="${r.percent()} + '%'">0%</strong>
+                    <span class="oa-similar-bar"><span th:style="'width:' + ${r.percent()} + '%'"></span></span></p>
+            </div>
+        </div>
+    </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>

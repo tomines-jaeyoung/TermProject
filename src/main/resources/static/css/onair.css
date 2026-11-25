@@ -199,3 +199,12 @@ a.oa-stat:hover { border-color: var(--oa-coral); }
     .oa-admin-detail { grid-template-columns: 1fr; }
     .oa-admin-detail img { max-width: 240px; }
 }
+
+/* ---------- 비슷한 경매 (TF-IDF 추천) ---------- */
+.oa-similar h2 { display: flex; align-items: center; gap: 8px; }
+.oa-ml-tag { font-size: 12px; font-weight: 700; color: #fff; background: var(--oa-black); border-radius: 999px; padding: 2px 9px; }
+.oa-similar .oa-grid { margin-top: 12px; }
+.oa-similar-score { margin: 6px 2px 0; font-size: 13px; color: var(--oa-muted); display: flex; align-items: center; gap: 6px; }
+.oa-similar-score strong { color: var(--oa-coral-dark); }
+.oa-similar-bar { flex: 1; height: 5px; border-radius: 999px; background: var(--oa-gray); overflow: hidden; }
+.oa-similar-bar span { display: block; height: 100%; background: var(--oa-coral); }

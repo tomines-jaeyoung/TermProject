@@ -1,20 +1,30 @@
-# 온에어마켓 (OnAir Market) — Spring Framework Term Project
+# 온에어마켓 (OnAir Market) — Term Project
 
 상품 소개 사진·동영상을 올리고, 정해진 기간 동안 입찰받는 경매 웹 서비스입니다.
-프레임워크 실습 기말 과제로, 온에어마켓 설계 보고서의 **사진·동영상 기간 경매**와 **회원가입·로그인**을
-Spring Boot + JPA로 구현했습니다. 중고 거래처럼 정해진 가격으로 바로 사는 **즉시 구매**도 함께 구현했습니다.
+온에어마켓 설계 보고서의 **사진·동영상 기간 경매**와 **회원가입·로그인**을 Spring Boot + JPA로 구현하고,
+중고 거래처럼 정해진 가격으로 바로 사는 **즉시 구매**, **관리자 화면**,
+머신러닝(TF-IDF + 코사인 유사도) 기반 **비슷한 경매 추천**을 함께 구현했습니다.
+
+## 사용한 과목 (배운 과목 2가지 이상 활용)
+
+| 과목 | 이 프로젝트에서 사용한 내용 |
+|---|---|
+| 프레임워크 실습 | Spring Boot · Spring MVC · Spring Security · Spring Data JPA로 서버, 회원가입·로그인, 권한 처리 |
+| 데이터베이스 | MySQL, E-R 설계(테이블 7개), JPA 엔티티 매핑, 조건부 UPDATE로 동시성 처리 |
+| 웹 프로그래밍 | Thymeleaf · HTML · CSS · JavaScript 화면 (목록·상세·등록 폼, 남은 시간, 업로드 진행률) |
+| 머신러닝심화 | 내용 기반 추천: 상품명·설명·카테고리 TF-IDF 벡터화 + 코사인 유사도 → 경매 상세의 '비슷한 경매' |
 
 ## ▶ 바로 실행해 보기
 
-**[http://192.168.26.135:8081](http://192.168.26.135:8081/)** — 학교 서버에서 실행 중 (학교 네트워크에서 접속)
+**[http://192.168.26.135:8082](http://192.168.26.135:8082/)** — 학교 서버에서 실행 중 (학교 네트워크에서 접속)
 
 | 화면 | 주소 |
 |---|---|
-| 첫 화면(소개) | http://192.168.26.135:8081/ |
-| 홈 (영상 경매 · 곧 낙찰 · 사진 경매 · 즉시 구매) | http://192.168.26.135:8081/home |
-| 즉시 구매 목록 | http://192.168.26.135:8081/home?view=products |
-| 회원가입 · 로그인 | http://192.168.26.135:8081/signup · http://192.168.26.135:8081/login |
-| 관리자 화면 (admin / admin1234) | http://192.168.26.135:8081/admin |
+| 첫 화면(소개) | http://192.168.26.135:8082/ |
+| 홈 (영상 경매 · 곧 낙찰 · 사진 경매 · 즉시 구매) | http://192.168.26.135:8082/home |
+| 경매 상세 + 비슷한 경매 추천 | 홈에서 아무 경매나 누르면 아래쪽에 'ML 추천' 표시 |
+| 회원가입 · 로그인 | http://192.168.26.135:8082/signup · http://192.168.26.135:8082/login |
+| 관리자 화면 (admin / admin1234) | http://192.168.26.135:8082/admin |
 
 ## 실행 방법 (IntelliJ)
 
@@ -70,6 +80,18 @@ IntelliJ 오른쪽 **Database** 창 → **＋ → Data Source → MySQL** → �
 | F-06 내 정보 | 내 경매 목록, 관심 경매, 내 즉시 판매 상품, 구매한 상품, 내 입찰 기록 | `MyPageController` |
 | F-09 관리 | 관리자 전용 화면(`/admin`): 대시보드(테이블별 현황), 회원 검색·이용 정지/해제·관리자 지정/해제, 경매 숨기기/다시 공개·입찰 기록, 즉시 구매 상품 삭제(판매 중만), 관리 이력. 모든 작업은 `admin_audit`에 기록 | `AdminController`, `AdminService`, `MemberStateInterceptor`, `SecurityConfig` |
 
+| F-10 비슷한 경매 추천 (ML) | 경매 상세 아래 '이 상품과 비슷한 경매' 최대 4개, 유사도(%) 표시 | `ml/TfIdfRecommender`, `RecommendationService` |
+
+### 머신러닝 추천 (F-10) 동작 방식
+
+1. **데이터** – JPA로 공개(숨기지 않은) 경매를 모두 읽습니다 (`findByArchivedFalse`).
+2. **토큰화** – 한글은 글자 2-gram(예: 빈티지 → 빈티, 티지), 영문·숫자는 단어 단위. 어미 같은 불용어는 제외.
+3. **TF-IDF** – 상품명은 2배 가중치, IDF = log((1+N)/(1+df)) + 1, 벡터는 L2 정규화.
+4. **코사인 유사도** – 정규화된 벡터의 내적. 자기 자신과 끝난 경매를 빼고 높은 순서로 4개.
+5. **재학습** – 경매 수나 최종 수정 시각이 바뀌면 모델을 다시 만들고, 바뀌지 않으면 메모리의 모델을 재사용합니다.
+
+외부 라이브러리 없이 Java로 구현했고, `TfIdfRecommenderTest`로 토큰화·순위·유사도 범위를 검증합니다.
+
 ### 관리자 기능 동작 규칙
 
 - `/admin/**`는 role이 `ADMIN`인 회원만 들어갈 수 있습니다 (비로그인 → 로그인 화면, 일반 회원 → 403).
@@ -94,9 +116,9 @@ IntelliJ 오른쪽 **Database** 창 → **＋ → Data Source → MySQL** → �
 
 ## 설계 보고서와 다른 점
 
-- **members 테이블 추가**: 보고서는 호스팅 계정 인증(로컬 users 테이블 없음) 기준이지만, 과제 조건(회원가입·로그인 DB 연동)에 맞춰 회원 테이블을 추가했습니다.
+- **members 테이블 추가**: 보고서는 호스팅 계정 인증(로컬 users 테이블 없음) 기준이지만, 회원가입·로그인을 DB와 연동하기 위해 회원 테이블을 추가했습니다.
 - **저장소**: Cloudflare D1 → MySQL, R2 → 로컬 `uploads/` 폴더.
-- **관리자**: 원 설계의 허용 목록 대신 `members.role`(ADMIN)로 권한을 구분하고, `admin_audit`은 원 설계 구성 그대로 구현했습니다. 판매자 상태(seller_status)와 요청 간격 제한(request_gates)은 이번 과제 범위에서 제외했습니다.
+- **관리자**: 원 설계의 허용 목록 대신 `members.role`(ADMIN)로 권한을 구분하고, `admin_audit`은 원 설계 구성 그대로 구현했습니다. 판매자 상태(seller_status)와 요청 간격 제한(request_gates)은 구현 범위에서 제외했습니다.
 - **즉시 구매**: 원 설계의 고정가 상품·예약(fixed_products·demo_orders, 재고·15분 예약)은 중고 거래형 `products` 한 테이블로 단순화했습니다. 상품 1개를 먼저 구매한 한 명에게 판매 완료합니다.
 - 결제·정산은 없습니다 (체험 경매).
 
@@ -105,8 +127,8 @@ IntelliJ 오른쪽 **Database** 창 → **＋ → Data Source → MySQL** → �
 서버에 Java·MySQL이 없어도 Docker만 있으면 실행됩니다. MySQL 8 컨테이너와 앱 컨테이너가 함께 뜹니다.
 
 ```bash
-git clone https://github.com/tomines-jaeyoung/SpringFrameworkTermProject.git
-cd SpringFrameworkTermProject
+git clone https://github.com/tomines-jaeyoung/TermProject.git
+cd TermProject
 APP_PORT=8081 docker compose up -d --build   # http://서버주소:8081
 docker compose logs -f app                   # 실행 로그
 git pull && docker compose up -d --build     # 코드 수정 후 다시 배포
@@ -122,4 +144,13 @@ docker run -d --name onair-db --network onair --restart unless-stopped   -e MYSQ
 docker build -t onairmarket .
 docker run -d --name onair-app --network onair --restart unless-stopped -p 8081:8080   -e SPRING_DATASOURCE_URL="jdbc:mysql://onair-db:3306/onairmarket?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false"   -e ONAIR_UPLOADDIR=/app/uploads -e SPRING_JPA_SHOWSQL=false -v onair-uploads:/app/uploads onairmarket
 # 코드 수정 후: git pull && docker build -t onairmarket . && docker rm -f onair-app && (위 docker run onair-app 다시 실행)
+```
+
+학교 서버에서는 이미 실행 중인 MySQL 컨테이너(`onair-db`)와 업로드 볼륨을 함께 쓰고, 이 프로젝트를 **8082 포트**로 띄웁니다.
+
+```bash
+cd ~ && git clone https://github.com/tomines-jaeyoung/TermProject.git && cd TermProject
+docker build -t termproject .
+docker run -d --name termproject-app --network onair --restart unless-stopped -p 8082:8080   -e SPRING_DATASOURCE_URL="jdbc:mysql://onair-db:3306/onairmarket?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false"   -e ONAIR_UPLOADDIR=/app/uploads -e SPRING_JPA_SHOWSQL=false -v onair-uploads:/app/uploads termproject
+# 코드 수정 후: cd ~/TermProject && git pull && docker build -t termproject . && docker rm -f termproject-app && (위 docker run 다시 실행)
 ```
