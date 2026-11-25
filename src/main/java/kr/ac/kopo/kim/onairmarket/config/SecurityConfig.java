@@ -27,10 +27,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/auctions/*", "/products/*", "/api/media/**", "/login", "/signup",
-                                "/css/**", "/js/**", "/sample/**", "/media/**", "/favicon.ico", "/favicon.svg", "/error").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        // 로그인이 필요한 주소만 지정하고 나머지(목록·상세·없는 주소의 404 화면 등)는 누구나 볼 수 있다
+                        .requestMatchers("/admin", "/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/sell", "/sell/**", "/my", "/auctions/*/bid", "/auctions/*/bookmark",
+                                "/products/*/buy").authenticated()
+                        .anyRequest().permitAll())
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")

@@ -62,6 +62,15 @@
                 bar.style.width = pct + '%'; label.textContent = pct + '%';
             };
             xhr.onload = function () {
+                if (xhr.status >= 400) {                       // 서버 오류(로그인 만료 403, 용량 초과 413 등): 원문 대신 안내
+                    box.hidden = true; button.disabled = false; button.textContent = '경매 등록';
+                    hint.textContent = xhr.status === 403
+                        ? '로그인이 만료되었거나 요청이 만료되었습니다. 새로고침한 뒤 다시 시도해 주세요.'
+                        : (xhr.status === 413 ? '파일이 너무 큽니다. 영상은 50MB, 사진은 8MB까지 올릴 수 있습니다.'
+                        : '등록에 실패했습니다 (오류 ' + xhr.status + '). 잠시 후 다시 시도해 주세요.');
+                    hint.style.color = '#c0392b';
+                    return;
+                }
                 if (xhr.responseURL && xhr.responseURL.indexOf('/sell/timed') === -1) {
                     window.location.href = xhr.responseURL;      // 등록 성공 → 상세 화면
                 } else {
